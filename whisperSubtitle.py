@@ -1,5 +1,6 @@
 import os
 import whisper
+import time
 from pathlib import Path
 
 from tkinter.filedialog import askopenfilename
@@ -14,7 +15,7 @@ video_path = askopenfilename()
 
 # Whisper model options
 model_type = 'small'
-video_lang = 'en'
+video_lang = 'hr'
 
 # output file options
 save_path = 'data'
@@ -31,15 +32,22 @@ format = 'srt'
 save_path = Path(save_path)
 save_path.mkdir(exist_ok=True, parents=True)
 
-def transcribe(video_path, save_path, filename, model_type='small', video_lang='en'):
+def transcribe(video_path, save_path, filename, model_type=model_type, video_lang=video_lang):
     # load Whisper model
     model = whisper.load_model(model_type)
-
+    
+    start_time = time.time()
     # set decoding options
     options = whisper.DecodingOptions(fp16=False, language=video_lang)
 
     # transcribe the video
     result = model.transcribe(video_path, **options.__dict__, verbose=True)
+
+    # calculate the duration of the transcription
+    duration = time.time() - start_time
+
+    # print the duration
+    print(f"Transcription duration: {duration:.2f} seconds")
 
     # convert segments to subtitle format
     sub = segments_to_srt(result['segments'])
@@ -72,7 +80,7 @@ def segments_to_srt(segs):
 
 def save_subtitle(sub, save_path, filename, format='srt'):
     sub_file = save_path/f'{filename}.{format}'
-    with open(sub_file, 'w') as f:
+    with open(sub_file, 'w', encoding='utf-8') as f:
         f.write(sub)
     return sub_file
 
